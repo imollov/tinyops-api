@@ -106,3 +106,30 @@ export const logoutUser = (req: Request, res: Response) => {
     res.status(200).send({ message: 'Logout successful' });
   });
 };
+
+export const getCurrentUser = async (req: Request, res: Response) => {
+  const userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).send({ error: 'Not authenticated' });
+  }
+
+  try {
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: {
+        username: true,
+        email: true,
+        name: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).send({ error: 'User not found' });
+    }
+
+    res.status(200).send({ user });
+  } catch (error) {
+    res.status(500).send({ error: 'Failed to retrieve user' });
+  }
+};
