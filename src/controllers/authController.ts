@@ -14,6 +14,11 @@ const registerUserSchema = z.object({
   password: z.string().min(6).max(255),
 });
 
+const loginUserSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6).max(255),
+});
+
 export const registerUser = async (req: Request, res: Response) => {
   const parseResult = registerUserSchema.safeParse(req.body);
   if (!parseResult.success) {
@@ -60,5 +65,35 @@ export const registerUser = async (req: Request, res: Response) => {
     res.status(201).send({ message: 'User registered', user: userResponse });
   } catch (error) {
     res.status(500).send({ error: 'Failed to register user' });
+  }
+};
+
+export const loginUser = async (req: Request, res: Response) => {
+  const parseResult = loginUserSchema.safeParse(req.body);
+  if (!parseResult.success) {
+    return res
+      .status(400)
+      .send({ error: 'Invalid login data', details: parseResult.error.errors });
+  }
+
+  const { email, password } = parseResult.data;
+
+  try {
+    const user = await db.user.findUnique({ where: { email } });
+
+    if (!user) {
+      return res.status(401).send({ error: 'Invalid email or password' });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      return res.status(401).send({ error: 'Invalid email or password' });
+    }
+
+    req.session.userId = user.id;
+
+    res.status(200).send({ message: 'Login successful' });
+  } catch (error) {
+    res.status(500).send({ error: 'Failed to login user' });
   }
 };
