@@ -97,3 +97,12 @@ export const loginUser = async (req: Request, res: Response) => {
     res.status(500).send({ error: 'Failed to login user' });
   }
 };
+
+export const logoutUser = (req: Request, res: Response) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).send({ error: 'Failed to logout user' });
+    }
+    res.status(200).send({ message: 'Logout successful' });
+  });
+};
