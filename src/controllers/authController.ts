@@ -109,9 +109,6 @@ export const logoutUser = (req: Request, res: Response) => {
 
 export const getCurrentUser = async (req: Request, res: Response) => {
   const userId = req.session.userId;
-  if (!userId) {
-    return res.status(401).send({ error: 'Not authenticated' });
-  }
 
   try {
     const user = await db.user.findUnique({

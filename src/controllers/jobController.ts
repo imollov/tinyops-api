@@ -6,7 +6,6 @@ const createJobSchema = z.object({
   type: z.string().min(1).max(64),
   payload: z.record(z.any()).default({}),
   runAt: z.string().datetime().optional(),
-  userId: z.string().uuid(),
 });
 
 export const createJob = async (req: Request, res: Response) => {
@@ -25,7 +24,7 @@ export const createJob = async (req: Request, res: Response) => {
         type: job.type,
         payload: job.payload,
         runAt: job.runAt ? new Date(job.runAt) : undefined,
-        userId: job.userId,
+        userId: req.session.userId!,
       },
     });
 
