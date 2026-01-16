@@ -1,8 +1,8 @@
 import express from 'express';
 import pinoHttp from 'pino-http';
-import logger from './utils/logger';
-import healthRouter from './routes/health';
-import jobsRouter from './routes/jobs';
+import { logger } from './utils/logger';
+import { healthRouter } from './routes/health';
+import { jobsRouter } from './routes/jobs';
 
 const app = express();
 
