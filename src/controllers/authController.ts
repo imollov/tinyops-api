@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import * as z from 'zod';
 import bcrypt from 'bcrypt';
 import { db } from '../utils/db';
+import { sendError } from '../utils/errors';
 
 const registerUserSchema = z.object({
   username: z
@@ -22,9 +23,12 @@ const loginUserSchema = z.object({
 export const registerUser = async (req: Request, res: Response) => {
   const parseResult = registerUserSchema.safeParse(req.body);
   if (!parseResult.success) {
-    return res
-      .status(400)
-      .send({ error: 'Invalid user data', details: parseResult.error.errors });
+    return sendError(
+      res,
+      400,
+      'Invalid registration data',
+      parseResult.error.errors,
+    );
   }
 
   const user = parseResult.data;
@@ -37,9 +41,7 @@ export const registerUser = async (req: Request, res: Response) => {
     });
 
     if (existingUser) {
-      return res
-        .status(409)
-        .send({ error: 'Username or email already in use' });
+      return sendError(res, 409, 'Username or email already in use');
     }
 
     const hashedPassword = await bcrypt.hash(user.password, 10);
@@ -64,16 +66,14 @@ export const registerUser = async (req: Request, res: Response) => {
 
     res.status(201).send({ message: 'User registered', user: userResponse });
   } catch (error) {
-    res.status(500).send({ error: 'Failed to register user' });
+    return sendError(res, 500, 'Failed to register user');
   }
 };
 
 export const loginUser = async (req: Request, res: Response) => {
   const parseResult = loginUserSchema.safeParse(req.body);
   if (!parseResult.success) {
-    return res
-      .status(400)
-      .send({ error: 'Invalid login data', details: parseResult.error.errors });
+    return sendError(res, 400, 'Invalid login data', parseResult.error.errors);
   }
 
   const { email, password } = parseResult.data;
@@ -82,26 +82,26 @@ export const loginUser = async (req: Request, res: Response) => {
     const user = await db.user.findUnique({ where: { email } });
 
     if (!user) {
-      return res.status(401).send({ error: 'Invalid email or password' });
+      return sendError(res, 401, 'Invalid email or password');
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
-      return res.status(401).send({ error: 'Invalid email or password' });
+      return sendError(res, 401, 'Invalid email or password');
     }
 
     req.session.userId = user.id;
 
     res.status(200).send({ message: 'Login successful' });
   } catch (error) {
-    res.status(500).send({ error: 'Failed to login user' });
+    return sendError(res, 500, 'Failed to login user');
   }
 };
 
 export const logoutUser = (req: Request, res: Response) => {
   req.session.destroy((err) => {
     if (err) {
-      return res.status(500).send({ error: 'Failed to logout user' });
+      return sendError(res, 500, 'Failed to logout user');
     }
     res.status(200).send({ message: 'Logout successful' });
   });
@@ -122,11 +122,11 @@ export const getCurrentUser = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res.status(404).send({ error: 'User not found' });
+      return sendError(res, 404, 'User not found');
     }
 
     res.status(200).send({ user });
   } catch (error) {
-    res.status(500).send({ error: 'Failed to retrieve user' });
+    return sendError(res, 500, 'Failed to retrieve user');
   }
 };

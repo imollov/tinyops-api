@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import * as z from 'zod';
 import { db } from '../utils/db';
+import { sendError } from '../utils/errors';
 import { JobStatus } from '../generated/prisma/enums';
 
 const createJobSchema = z.object({
@@ -17,14 +18,12 @@ const getAllJobsSchema = z.object({
 });
 
 export const createJob = async (req: Request, res: Response) => {
-  const parseResult = createJobSchema.safeParse(req.body);
-  if (!parseResult.success) {
-    return res
-      .status(400)
-      .send({ error: 'Invalid job data', details: parseResult.error.errors });
+  const parsed = createJobSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return sendError(res, 400, 'Invalid job data', parsed.error.format());
   }
 
-  const job = parseResult.data;
+  const job = parsed.data;
 
   try {
     const createdJob = await db.job.create({
@@ -46,20 +45,22 @@ export const createJob = async (req: Request, res: Response) => {
 
     res.status(201).send({ message: 'Job created', job: jobResponse });
   } catch (error) {
-    res.status(500).send({ error: 'Failed to create job' });
+    return sendError(res, 500, 'Failed to create job');
   }
 };
 
 export const getAllJobs = async (req: Request, res: Response) => {
-  const parsedResult = getAllJobsSchema.safeParse(req.query);
-  if (!parsedResult.success) {
-    return res.status(400).send({
-      error: 'Invalid query parameters',
-      details: parsedResult.error.errors,
-    });
+  const parsed = getAllJobsSchema.safeParse(req.query);
+  if (!parsed.success) {
+    return sendError(
+      res,
+      400,
+      'Invalid query parameters',
+      parsed.error.format(),
+    );
   }
 
-  const { status, type, limit, offset } = parsedResult.data;
+  const { status, type, limit, offset } = parsed.data;
 
   try {
     const jobs = await db.job.findMany({
@@ -81,6 +82,6 @@ export const getAllJobs = async (req: Request, res: Response) => {
 
     res.status(200).send({ jobs });
   } catch (error) {
-    res.status(500).send({ error: 'Failed to retrieve jobs' });
+    return sendError(res, 500, 'Failed to retrieve jobs');
   }
 };
