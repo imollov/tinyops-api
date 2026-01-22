@@ -1,10 +1,5 @@
 import { Router } from 'express';
-import {
-  registerUser,
-  loginUser,
-  logoutUser,
-  getCurrentUser,
-} from '../controllers/authController';
+import { registerUser, loginUser, logoutUser, getCurrentUser } from '../controllers/authController';
 import { requireAuth } from '../middleware/auth';
 
 export const authRouter = Router();

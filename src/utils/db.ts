@@ -9,10 +9,7 @@ export const db = new PrismaClient({
 });
 
 db.$on('query', (e) => {
-  logger.debug(
-    { query: e.query, params: e.params, duration: `${e.duration}ms` },
-    'Prisma Query',
-  );
+  logger.debug({ query: e.query, params: e.params, duration: `${e.duration}ms` }, 'Prisma Query');
 });
 
 db.$on('error', (e) => {

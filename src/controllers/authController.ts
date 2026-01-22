@@ -23,12 +23,7 @@ const loginUserSchema = z.object({
 export const registerUser = async (req: Request, res: Response) => {
   const parseResult = registerUserSchema.safeParse(req.body);
   if (!parseResult.success) {
-    return sendError(
-      res,
-      400,
-      'Invalid registration data',
-      parseResult.error.errors,
-    );
+    return sendError(res, 400, 'Invalid registration data', parseResult.error.errors);
   }
 
   const user = parseResult.data;
