@@ -36,16 +36,17 @@ enum JobStatus {
 }
 
 model Job {
-  id        String    @id @default(uuid()) @db.Uuid
-  type      String    @db.VarChar(100)
-  payload   Json      @db.JsonB
-  status    JobStatus @default(PENDING)
-  attempts  Int       @default(0) @db.SmallInt
-  runAt     DateTime  @default(now()) @map("run_at")
-  lastError String?   @map("last_error")
-  userId    String    @map("user_id") @db.Uuid
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
+  id             String    @id @default(uuid()) @db.Uuid
+  type           String    @db.VarChar(100)
+  payload        Json      @db.JsonB
+  status         JobStatus @default(PENDING)
+  attempts       Int       @default(0) @db.SmallInt
+  runAt          DateTime  @default(now()) @map("run_at")
+  lastError      String?   @map("last_error")
+  userId         String    @map("user_id") @db.Uuid
+  idempotencyKey String?   @unique @map("idempotency_key") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

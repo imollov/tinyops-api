@@ -24,6 +24,7 @@ CREATE TABLE "jobs" (
     "run_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "last_error" TEXT,
     "user_id" UUID NOT NULL,
+    "idempotency_key" UUID,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -35,6 +36,9 @@ CREATE UNIQUE INDEX "users_username_key" ON "users"("username");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "jobs_idempotency_key_key" ON "jobs"("idempotency_key");
 
 -- CreateIndex
 CREATE INDEX "jobs_user_id_idx" ON "jobs"("user_id");

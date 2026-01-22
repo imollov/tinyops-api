@@ -41,14 +41,39 @@ export const createJob = async (req: Request, res: Response) => {
     return sendError(res, 400, 'Invalid job data', parsed.error.format());
   }
 
+  const idempotencyKey = req.headers['idempotency-key'] as string | undefined;
+  if (idempotencyKey && !z.string().uuid().safeParse(idempotencyKey).success) {
+    return sendError(res, 400, 'Invalid idempotency key');
+  }
+
   const job = parsed.data;
 
   try {
+    if (idempotencyKey) {
+      const existingJob = await db.job.findFirst({
+        where: {
+          idempotencyKey: idempotencyKey,
+          userId: req.session.userId!,
+        },
+      });
+      if (existingJob) {
+        const jobResponse = {
+          id: existingJob.id,
+          type: existingJob.type,
+          payload: existingJob.payload,
+          runAt: existingJob.runAt,
+          status: existingJob.status,
+        };
+        return res.status(200).send({ message: 'Job already exists', job: jobResponse });
+      }
+    }
+
     const createdJob = await db.job.create({
       data: {
         type: job.type,
         payload: job.payload,
         runAt: job.runAt ? new Date(job.runAt) : undefined,
+        idempotencyKey: idempotencyKey,
         userId: req.session.userId!,
       },
     });
