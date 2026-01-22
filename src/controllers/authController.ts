@@ -3,6 +3,7 @@ import * as z from 'zod';
 import bcrypt from 'bcrypt';
 import { db } from '../utils/db';
 import { sendError } from '../utils/errors';
+import { User } from '../generated/prisma/client';
 
 const registerUserSchema = z.object({
   username: z
@@ -19,6 +20,15 @@ const loginUserSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6).max(255),
 });
+
+function toUserResponse(user: User) {
+  return {
+    username: user.username,
+    email: user.email,
+    name: user.name,
+    createdAt: user.createdAt.toISOString(),
+  };
+}
 
 export const registerUser = async (req: Request, res: Response) => {
   const parseResult = registerUserSchema.safeParse(req.body);
@@ -50,16 +60,9 @@ export const registerUser = async (req: Request, res: Response) => {
       },
     });
 
-    const userResponse = {
-      username: newUser.username,
-      email: newUser.email,
-      name: newUser.name,
-      createdAt: newUser.createdAt,
-    };
-
     req.session.userId = newUser.id;
 
-    res.status(201).send({ message: 'User registered', user: userResponse });
+    res.status(201).send({ message: 'User registered', user: toUserResponse(newUser) });
   } catch (error) {
     return sendError(res, 500, 'Failed to register user');
   }
@@ -108,19 +111,13 @@ export const getCurrentUser = async (req: Request, res: Response) => {
   try {
     const user = await db.user.findUnique({
       where: { id: userId },
-      select: {
-        username: true,
-        email: true,
-        name: true,
-        createdAt: true,
-      },
     });
 
     if (!user) {
       return sendError(res, 404, 'User not found');
     }
 
-    res.status(200).send({ user });
+    res.status(200).send({ user: toUserResponse(user) });
   } catch (error) {
     return sendError(res, 500, 'Failed to retrieve user');
   }

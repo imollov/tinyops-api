@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import * as z from 'zod';
 import { db } from '../utils/db';
 import { sendError } from '../utils/errors';
+import { Job } from '../generated/prisma/client';
 import { JobStatus } from '../generated/prisma/enums';
 
 const createJobSchema = z.object({
@@ -16,6 +17,20 @@ const getAllJobsSchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
   cursor: z.string().optional(),
 });
+
+function toJobResponse(job: Job) {
+  return {
+    id: job.id,
+    type: job.type,
+    payload: job.payload,
+    runAt: job.runAt.toISOString(),
+    createdAt: job.createdAt.toISOString(),
+    updatedAt: job.updatedAt.toISOString(),
+    status: job.status,
+    attempts: job.attempts,
+    lastError: job.lastError,
+  };
+}
 
 function encodeCursor(createdAt: Date, id: string) {
   const str = JSON.stringify({ createdAt: createdAt.toISOString(), id });
@@ -57,14 +72,9 @@ export const createJob = async (req: Request, res: Response) => {
         },
       });
       if (existingJob) {
-        const jobResponse = {
-          id: existingJob.id,
-          type: existingJob.type,
-          payload: existingJob.payload,
-          runAt: existingJob.runAt,
-          status: existingJob.status,
-        };
-        return res.status(200).send({ message: 'Job already exists', job: jobResponse });
+        return res
+          .status(200)
+          .send({ message: 'Job already exists', job: toJobResponse(existingJob) });
       }
     }
 
@@ -78,15 +88,7 @@ export const createJob = async (req: Request, res: Response) => {
       },
     });
 
-    const jobResponse = {
-      id: createdJob.id,
-      type: createdJob.type,
-      payload: createdJob.payload,
-      runAt: createdJob.runAt,
-      status: createdJob.status,
-    };
-
-    res.status(201).send({ message: 'Job created', job: jobResponse });
+    res.status(201).send({ message: 'Job created', job: toJobResponse(createdJob) });
   } catch (error) {
     return sendError(res, 500, 'Failed to create job');
   }
@@ -122,15 +124,7 @@ export const getAllJobs = async (req: Request, res: Response) => {
       take: limit + 1,
     });
 
-    const jobsResponse = jobs.slice(0, limit).map((job) => ({
-      id: job.id,
-      type: job.type,
-      payload: job.payload,
-      runAt: job.runAt.toISOString(),
-      createdAt: job.createdAt.toISOString(),
-      status: job.status,
-    }));
-
+    const jobsResponse = jobs.slice(0, limit).map(toJobResponse);
     const hasMore = jobs.length > limit;
     const nextCursor = hasMore ? encodeCursor(jobs[limit].createdAt, jobs[limit].id) : null;
 
