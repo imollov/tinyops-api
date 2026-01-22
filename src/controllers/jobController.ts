@@ -13,9 +13,27 @@ const createJobSchema = z.object({
 const getAllJobsSchema = z.object({
   status: z.nativeEnum(JobStatus).optional(),
   type: z.string().max(64).optional(),
-  limit: z.string().regex(/^\d+$/).transform(Number).optional().default('100'),
-  offset: z.string().regex(/^\d+$/).transform(Number).optional().default('0'),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  cursor: z.string().optional(),
 });
+
+function encodeCursor(createdAt: Date, id: string) {
+  const str = JSON.stringify({ createdAt: createdAt.toISOString(), id });
+  return Buffer.from(str, 'utf-8').toString('base64url');
+}
+
+function decodeCursor(cursor: string): { createdAt: Date; id: string } | null {
+  try {
+    const decoded = Buffer.from(cursor, 'base64url').toString('utf-8');
+    const parsed = JSON.parse(decoded);
+    if (typeof parsed.createdAt !== 'string' || typeof parsed.id !== 'string') return null;
+    const d = new Date(parsed.createdAt);
+    if (isNaN(d.getTime())) return null;
+    return { createdAt: d, id: parsed.id };
+  } catch {
+    return null;
+  }
+}
 
 export const createJob = async (req: Request, res: Response) => {
   const parsed = createJobSchema.safeParse(req.body);
@@ -52,35 +70,46 @@ export const createJob = async (req: Request, res: Response) => {
 export const getAllJobs = async (req: Request, res: Response) => {
   const parsed = getAllJobsSchema.safeParse(req.query);
   if (!parsed.success) {
-    return sendError(
-      res,
-      400,
-      'Invalid query parameters',
-      parsed.error.format(),
-    );
+    return sendError(res, 400, 'Invalid query parameters', parsed.error.format());
   }
 
-  const { status, type, limit, offset } = parsed.data;
+  const { status, type, limit, cursor } = parsed.data;
+
+  const cursorData = cursor ? decodeCursor(cursor) : null;
+  if (cursor && !cursorData) {
+    return sendError(res, 400, 'Invalid cursor');
+  }
+
+  let where: any = { userId: req.session.userId! };
+  if (status) where.status = status;
+  if (type) where.type = type;
+
+  if (cursorData)
+    where.OR = [
+      { createdAt: { lt: cursorData.createdAt } },
+      { createdAt: cursorData.createdAt, id: { lte: cursorData.id } },
+    ];
 
   try {
     const jobs = await db.job.findMany({
-      where: {
-        userId: req.session.userId!,
-        ...(status && { status }),
-        ...(type && { type }),
-      },
-      select: {
-        id: true,
-        type: true,
-        payload: true,
-        runAt: true,
-        status: true,
-      },
-      take: limit,
-      skip: offset,
+      where,
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: limit + 1,
     });
 
-    res.status(200).send({ jobs });
+    const jobsResponse = jobs.slice(0, limit).map((job) => ({
+      id: job.id,
+      type: job.type,
+      payload: job.payload,
+      runAt: job.runAt.toISOString(),
+      createdAt: job.createdAt.toISOString(),
+      status: job.status,
+    }));
+
+    const hasMore = jobs.length > limit;
+    const nextCursor = hasMore ? encodeCursor(jobs[limit].createdAt, jobs[limit].id) : null;
+
+    res.status(200).send({ jobs: jobsResponse, nextCursor });
   } catch (error) {
     return sendError(res, 500, 'Failed to retrieve jobs');
   }
