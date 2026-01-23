@@ -3,6 +3,7 @@ import * as z from 'zod';
 import bcrypt from 'bcrypt';
 import { db } from '../utils/db';
 import { sendError } from '../utils/errors';
+import { cache, cacheKeys } from '../utils/cache';
 import { User } from '../generated/prisma/client';
 
 const registerUserSchema = z.object({
@@ -106,9 +107,15 @@ export const logoutUser = (req: Request, res: Response) => {
 };
 
 export const getCurrentUser = async (req: Request, res: Response) => {
-  const userId = req.session.userId;
+  const userId = req.session.userId!;
+  const cacheKey = cacheKeys.user(userId);
 
   try {
+    const cachedUser = cache.get<User>(cacheKey);
+    if (cachedUser) {
+      return res.status(200).send({ user: toUserResponse(cachedUser) });
+    }
+
     const user = await db.user.findUnique({
       where: { id: userId },
     });
@@ -116,6 +123,8 @@ export const getCurrentUser = async (req: Request, res: Response) => {
     if (!user) {
       return sendError(res, 404, 'User not found');
     }
+
+    cache.set(cacheKey, user);
 
     res.status(200).send({ user: toUserResponse(user) });
   } catch (error) {
