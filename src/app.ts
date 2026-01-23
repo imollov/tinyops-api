@@ -2,6 +2,7 @@ import express from 'express';
 import pinoHttp from 'pino-http';
 import cors from 'cors';
 import session from 'express-session';
+import rateLimit from 'express-rate-limit';
 import { logger } from './utils/logger';
 import { healthRouter } from './routes/health';
 import { authRouter } from './routes/auth';
@@ -23,6 +24,18 @@ app.use(
       secure: false,
       sameSite: 'lax',
     },
+  }),
+);
+
+app.use(
+  rateLimit({
+    windowMs: process.env.RATE_LIMIT_WINDOW_SECONDS
+      ? parseInt(process.env.RATE_LIMIT_WINDOW_SECONDS) * 1000
+      : 15 * 60 * 1000,
+    max: process.env.RATE_LIMIT_MAX ? parseInt(process.env.RATE_LIMIT_MAX) : 100,
+    message: { error: 'Too many requests' },
+    standardHeaders: true,
+    legacyHeaders: false,
   }),
 );
 
