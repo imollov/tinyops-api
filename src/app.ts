@@ -10,6 +10,7 @@ import { logger } from './utils/logger';
 import { healthRouter } from './routes/health';
 import { authRouter } from './routes/auth';
 import { jobsRouter } from './routes/jobs';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 const app = express();
 
@@ -45,5 +46,8 @@ app.use(
 app.use('/health', healthRouter);
 app.use('/auth', authRouter);
 app.use('/jobs', jobsRouter);
+
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 export default app;
