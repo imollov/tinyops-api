@@ -16,6 +16,18 @@ services:
     depends_on:
       - postgres
 
+  worker:
+    build: .
+    command: npm run worker:start
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - POLL_INTERVAL_MS=${POLL_INTERVAL_MS}
+      - MAX_RETRIES=${MAX_RETRIES}
+      - DATABASE_URL=${DATABASE_URL}
+    depends_on:
+      - postgres
+
   postgres:
     image: postgres:16-alpine
     environment:

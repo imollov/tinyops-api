@@ -8,6 +8,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "nodemon src/server.ts",
+    "worker": "nodemon src/worker.ts",
+    "worker:start": "node dist/worker.js",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write .",
     "db:up": "docker compose up -d postgres",
