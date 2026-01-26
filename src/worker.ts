@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import { db } from './utils/db';
 import { config } from './config';
 import { logger } from './utils/logger';

@@ -1,10 +1,7 @@
 import app from './app';
-import dotenv from 'dotenv';
 import { config } from './config';
 import { logger } from './utils/logger';
 import { db } from './utils/db';
-
-dotenv.config();
 
 const server = app.listen(config.port, () => {
   logger.info(`Server running on http://localhost:${config.port}`);
