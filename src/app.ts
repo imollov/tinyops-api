@@ -5,6 +5,7 @@ import pinoHttp from 'pino-http';
 import cors from 'cors';
 import session from 'express-session';
 import rateLimit from 'express-rate-limit';
+import { config } from './config';
 import { logger } from './utils/logger';
 import { healthRouter } from './routes/health';
 import { authRouter } from './routes/auth';
@@ -20,12 +21,12 @@ app.use(pinoHttp({ logger }));
 
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || 'default_secret',
+    secret: config.sessionSecret,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: config.nodeEnv === 'production',
       sameSite: 'lax',
     },
   }),
@@ -33,10 +34,8 @@ app.use(
 
 app.use(
   rateLimit({
-    windowMs: process.env.RATE_LIMIT_WINDOW_SECONDS
-      ? parseInt(process.env.RATE_LIMIT_WINDOW_SECONDS) * 1000
-      : 15 * 60 * 1000,
-    max: process.env.RATE_LIMIT_MAX ? parseInt(process.env.RATE_LIMIT_MAX) : 100,
+    windowMs: config.rateLimitWindowSeconds * 1000,
+    max: config.rateLimitMax,
     message: { error: 'Too many requests' },
     standardHeaders: true,
     legacyHeaders: false,

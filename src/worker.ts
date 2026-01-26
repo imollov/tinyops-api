@@ -1,10 +1,8 @@
 import 'dotenv/config';
 import { db } from './utils/db';
+import { config } from './config';
 import { logger } from './utils/logger';
 import { JobStatus } from './generated/prisma/client';
-
-const POLL_INTERVAL_MS = process.env.POLL_INTERVAL_MS ? Number(process.env.POLL_INTERVAL_MS) : 5000;
-const MAX_RETRIES = process.env.MAX_RETRIES ? Number(process.env.MAX_RETRIES) : 3;
 
 async function processJob(jobId: string) {
   logger.info({ jobId }, 'Processing job');
@@ -35,7 +33,7 @@ async function processJob(jobId: string) {
 
     logger.error({ jobId, error, attempts }, 'Job failed');
 
-    if (attempts >= MAX_RETRIES) {
+    if (attempts >= config.maxRetries) {
       await db.job.update({
         where: { id: jobId },
         data: {
@@ -108,7 +106,7 @@ async function startWorker() {
 
   while (true) {
     await pollJobs();
-    await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+    await new Promise((resolve) => setTimeout(resolve, config.pollIntervalMs));
   }
 }
 
