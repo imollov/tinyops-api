@@ -3,8 +3,8 @@ import { config } from './config';
 import { logger } from './utils/logger';
 import { db } from './utils/db';
 
-const server = app.listen(config.port, () => {
-  logger.info(`Server running on http://localhost:${config.port}`);
+const server = app.listen(config.port, config.hostname, () => {
+  logger.info(`Server running on http://${config.hostname}:${config.port}`);
 });
 
 async function gracefulShutdown(signal: string) {

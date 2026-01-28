@@ -5,6 +5,7 @@ dotenv.config();
 
 const configSchema = z.object({
   port: z.coerce.number().int().min(1).max(65535).default(3000),
+  hostname: z.string().default('0.0.0.0'),
   nodeEnv: z.enum(['development', 'production', 'test']).default('development'),
   databaseUrl: z.string().url(),
   sessionSecret: z.string().min(32, 'Session secret must be at least 32 characters'),
@@ -20,6 +21,7 @@ type AppConfig = z.infer<typeof configSchema>;
 function loadConfig(): AppConfig {
   const parsed = configSchema.safeParse({
     port: process.env.PORT,
+    hostname: process.env.HOSTNAME,
     nodeEnv: process.env.NODE_ENV,
     databaseUrl: process.env.DATABASE_URL,
     sessionSecret: process.env.SESSION_SECRET,
