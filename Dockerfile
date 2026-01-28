@@ -19,8 +19,9 @@ WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/src/generated ./dist/generated
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+CMD npx prisma migrate deploy && npm start
