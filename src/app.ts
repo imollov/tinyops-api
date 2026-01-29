@@ -5,8 +5,10 @@ import pinoHttp from 'pino-http';
 import cors from 'cors';
 import session from 'express-session';
 import rateLimit from 'express-rate-limit';
+import { RedisStore } from 'connect-redis';
 import { config } from './config';
 import { logger } from './utils/logger';
+import { redis } from './utils/redis';
 import { healthRouter } from './routes/health';
 import { authRouter } from './routes/auth';
 import { jobsRouter } from './routes/jobs';
@@ -22,6 +24,7 @@ app.use(pinoHttp({ logger }));
 
 app.use(
   session({
+    store: new RedisStore({ client: redis }),
     secret: config.sessionSecret,
     resave: false,
     saveUninitialized: false,

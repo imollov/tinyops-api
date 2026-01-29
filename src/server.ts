@@ -1,6 +1,7 @@
 import app from './app';
 import { config } from './config';
 import { logger } from './utils/logger';
+import { redis } from './utils/redis';
 import { db } from './utils/db';
 
 const server = app.listen(config.port, config.hostname, () => {
@@ -16,6 +17,8 @@ async function gracefulShutdown(signal: string) {
     try {
       await db.$disconnect();
       logger.info('Database connection closed');
+      await redis.quit();
+      logger.info('Redis connection closed');
       process.exit(0);
     } catch (error) {
       logger.error({ error }, 'Error during shutdown');

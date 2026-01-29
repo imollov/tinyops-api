@@ -27,7 +27,7 @@ function toUserResponse(user: User) {
     username: user.username,
     email: user.email,
     name: user.name,
-    createdAt: user.createdAt.toISOString(),
+    createdAt: user.createdAt,
   };
 }
 
@@ -111,7 +111,7 @@ export const getCurrentUser = async (req: Request, res: Response) => {
   const cacheKey = cacheKeys.user(userId);
 
   try {
-    const cachedUser = cache.get<User>(cacheKey);
+    const cachedUser = await cache.get<User>(cacheKey);
     if (cachedUser) {
       return res.status(200).send({ user: toUserResponse(cachedUser) });
     }
@@ -124,7 +124,7 @@ export const getCurrentUser = async (req: Request, res: Response) => {
       return sendError(res, 404, 'User not found');
     }
 
-    cache.set(cacheKey, user);
+    await cache.set(cacheKey, user);
 
     res.status(200).send({ user: toUserResponse(user) });
   } catch (error) {

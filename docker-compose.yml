@@ -13,8 +13,10 @@ services:
       - RATE_LIMIT_MAX=${RATE_LIMIT_MAX}
       - RATE_LIMIT_WINDOW_SECONDS=${RATE_LIMIT_WINDOW_SECONDS}
       - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
     depends_on:
       - postgres
+      - redis
 
   worker:
     build: .
@@ -38,6 +40,16 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:
