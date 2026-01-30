@@ -1,6 +1,6 @@
 import pino from 'pino';
-import { config } from '../config';
+import { baseConfig } from '../config/base';
 
-const level = config.nodeEnv === 'test' ? 'silent' : config.logLevel;
+const level = baseConfig.nodeEnv === 'test' ? 'silent' : baseConfig.logLevel;
 
 export const logger = pino({ level });

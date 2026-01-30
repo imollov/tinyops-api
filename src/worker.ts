@@ -1,6 +1,6 @@
 import { db } from './utils/db';
-import { config } from './config';
 import { logger } from './utils/logger';
+import { workerConfig } from './config/worker';
 import { JobStatus } from './generated/prisma/client';
 
 async function processJob(jobId: string) {
@@ -32,7 +32,7 @@ async function processJob(jobId: string) {
 
     logger.error({ jobId, error, attempts }, 'Job failed');
 
-    if (attempts >= config.maxRetries) {
+    if (attempts >= workerConfig.maxRetries) {
       await db.job.update({
         where: { id: jobId },
         data: {
@@ -105,7 +105,7 @@ async function startWorker() {
 
   while (true) {
     await pollJobs();
-    await new Promise((resolve) => setTimeout(resolve, config.pollIntervalMs));
+    await new Promise((resolve) => setTimeout(resolve, workerConfig.pollIntervalMs));
   }
 }
 

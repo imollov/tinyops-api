@@ -6,7 +6,7 @@ import cors from 'cors';
 import session from 'express-session';
 import rateLimit from 'express-rate-limit';
 import { RedisStore } from 'connect-redis';
-import { config } from './config';
+import { appConfig } from './config/app';
 import { logger } from './utils/logger';
 import { redis } from './utils/redis';
 import { healthRouter } from './routes/health';
@@ -25,12 +25,12 @@ app.use(pinoHttp({ logger }));
 app.use(
   session({
     store: new RedisStore({ client: redis }),
-    secret: config.sessionSecret,
+    secret: appConfig.sessionSecret,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: config.nodeEnv === 'production',
+      secure: appConfig.nodeEnv === 'production',
       sameSite: 'lax',
     },
   }),
@@ -38,8 +38,8 @@ app.use(
 
 app.use(
   rateLimit({
-    windowMs: config.rateLimitWindowSeconds * 1000,
-    max: config.rateLimitMax,
+    windowMs: appConfig.rateLimitWindowSeconds * 1000,
+    max: appConfig.rateLimitMax,
     message: { error: 'Too many requests' },
     standardHeaders: true,
     legacyHeaders: false,

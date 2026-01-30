@@ -1,8 +1,8 @@
 import Redis from 'ioredis';
 import { logger } from './logger';
-import { config } from '../config';
+import { baseConfig } from '../config/base';
 
-export const redis = new Redis(config.redisUrl);
+export const redis = new Redis(baseConfig.redisUrl);
 
 redis.on('error', (err) => {
   logger.error({ err }, 'Redis error');

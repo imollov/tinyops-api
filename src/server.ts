@@ -1,11 +1,11 @@
 import app from './app';
-import { config } from './config';
+import { appConfig } from './config/app';
 import { logger } from './utils/logger';
 import { redis } from './utils/redis';
 import { db } from './utils/db';
 
-const server = app.listen(config.port, config.hostname, () => {
-  logger.info(`Server running on http://${config.hostname}:${config.port}`);
+const server = app.listen(appConfig.port, appConfig.hostname, () => {
+  logger.info(`Server running on http://${appConfig.hostname}:${appConfig.port}`);
 });
 
 async function gracefulShutdown(signal: string) {
