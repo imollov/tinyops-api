@@ -121,7 +121,7 @@ describe('Auth Endpoints', () => {
       const response = await request(app).get('/auth/me');
 
       expect(response.status).toBe(401);
-      expect(response.body).toHaveProperty('error', 'Unauthorized');
+      expect(response.body).toHaveProperty('error', 'Not authenticated');
     });
   });
 
