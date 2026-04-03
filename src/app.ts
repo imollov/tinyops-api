@@ -32,7 +32,7 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: appConfig.nodeEnv === 'production',
+      secure: appConfig.cookieSecure,
       sameSite: 'lax',
     },
   }),

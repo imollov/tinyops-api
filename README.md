@@ -13,6 +13,7 @@ A modern, production-ready REST API built with Node.js, TypeScript, Express, and
 - 🛡️ **Security** - Helmet, CORS, rate limiting
 - 🧪 **Testing** - Jest with supertest
 - 🐳 **Docker** - Containerized development and deployment
+- ☸️ **Kubernetes** - Ready for orchestration
 - 📝 **Logging** - Pino structured logging
 
 ## Prerequisites
@@ -139,6 +140,14 @@ ESLint and Prettier are configured for code quality and formatting. Use the foll
 ```bash
 npm run lint
 npm run format
+```
+
+## Kubernetes
+
+Apply all manifests from the `k8s` directory:
+
+```bash
+kubectl apply -f k8s/
 ```
 
 ## AWS Deployment
