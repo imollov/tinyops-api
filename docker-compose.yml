@@ -26,9 +26,12 @@ services:
       - LOG_LEVEL=${LOG_LEVEL}
       - POLL_INTERVAL_MS=${POLL_INTERVAL_MS}
       - MAX_RETRIES=${MAX_RETRIES}
+      - WORKER_CONCURRENCY=${WORKER_CONCURRENCY}
       - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
     depends_on:
       - postgres
+      - redis
 
   postgres:
     image: postgres:16-alpine

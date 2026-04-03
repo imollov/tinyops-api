@@ -4,6 +4,7 @@ import { baseConfigSchema, baseConfig } from './base';
 const workerConfigSchema = baseConfigSchema.extend({
   pollIntervalMs: z.coerce.number().int().min(1000).default(5000),
   maxRetries: z.coerce.number().int().min(1).default(3),
+  concurrency: z.coerce.number().int().min(1).default(5),
 });
 
 export type WorkerConfig = z.infer<typeof workerConfigSchema>;
@@ -13,6 +14,7 @@ function loadWorkerConfig(): WorkerConfig {
     ...baseConfig,
     pollIntervalMs: process.env.POLL_INTERVAL_MS,
     maxRetries: process.env.MAX_RETRIES,
+    concurrency: process.env.WORKER_CONCURRENCY,
   });
 
   if (!parsed.success) {

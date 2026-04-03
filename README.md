@@ -9,6 +9,7 @@ A modern, production-ready REST API built with Node.js, TypeScript, Express, and
 - 📊 **Job Management** - Background job processing with worker service
 - 💾 **PostgreSQL** - Prisma ORM for database management
 - ⚡ **Redis** - Session storage and caching
+- 🐂 **BullMQ** - Job queue with retries, backoff, and delayed jobs
 - 🛡️ **Security** - Helmet, CORS, rate limiting
 - 🧪 **Testing** - Jest with supertest
 - 🐳 **Docker** - Containerized development and deployment
@@ -58,6 +59,7 @@ REDIS_URL=redis://localhost:6379
 
 # Worker
 POLL_INTERVAL_MS=5000
+WORKER_CONCURRENCY=5
 MAX_RETRIES=3
 ```
 
@@ -146,7 +148,7 @@ Deployed on AWS with a production-style setup:
 - **ECS Fargate**: API service + worker service
 - **Application Load Balancer**: routes traffic to API tasks
 - **RDS PostgreSQL**: primary datastore
-- **ElastiCache Redis**: sessions + caching
+- **ElastiCache Redis**: sessions, caching, and job queue
 - **ECR**: Docker image registry
 - **CloudWatch Logs**: centralized logs for API + worker
 

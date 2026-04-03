@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import { db } from '../src/utils/db';
-import { claimJobs } from '../src/worker/processor';
+import { claimJobs } from '../src/worker/dbPollingWorker';
 
 describe('claimJobs', () => {
   let userId: string;

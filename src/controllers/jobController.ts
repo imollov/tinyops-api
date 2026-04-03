@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import * as z from 'zod';
 import { db } from '../utils/db';
+import { logger } from '../utils/logger';
+import { jobQueue } from '../utils/queue';
 import { sendError } from '../utils/errors';
 import { Job } from '../generated/prisma/client';
 import { JobStatus } from '../generated/prisma/enums';
@@ -87,6 +89,14 @@ export const createJob = async (req: Request, res: Response) => {
         userId: req.session.userId!,
       },
     });
+
+    const delay = job.runAt ? Math.max(0, new Date(job.runAt).getTime() - Date.now()) : 0;
+
+    try {
+      await jobQueue.add(createdJob.type, { jobId: createdJob.id }, { delay });
+    } catch (err) {
+      logger.warn({ jobId: createdJob.id, err }, 'Failed to enqueue job in BullMQ');
+    }
 
     res.status(201).send({ message: 'Job created', job: toJobResponse(createdJob) });
   } catch (error) {

@@ -16,6 +16,13 @@ jest.mock('../src/utils/redis', () => ({
   redis: new RedisMock(),
 }));
 
+jest.mock('../src/utils/queue', () => ({
+  jobQueue: {
+    add: jest.fn().mockResolvedValue({ id: 'mock-bullmq-id' }),
+  },
+  connection: { host: 'localhost', port: 6379 },
+}));
+
 beforeAll(async () => {
   await execAsync('npx prisma db push --skip-generate --accept-data-loss', { env: process.env });
 });
