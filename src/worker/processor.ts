@@ -1,20 +1,43 @@
-import { db } from './utils/db';
-import { logger } from './utils/logger';
-import { workerConfig } from './config/worker';
-import { JobStatus } from './generated/prisma/client';
+import { db } from '../utils/db';
+import { logger } from '../utils/logger';
+import { workerConfig } from '../config/worker';
+import { JobStatus } from '../generated/prisma/client';
+
+export async function pollJobs() {
+  try {
+    const jobs = await claimJobs();
+
+    if (jobs.length > 0) {
+      logger.info({ count: jobs.length }, 'Found pending jobs');
+
+      await Promise.all(jobs.map((job) => processJob(job.id)));
+    }
+  } catch (error) {
+    logger.error({ error }, 'Error polling jobs');
+  }
+}
+
+export async function claimJobs(limit = 10): Promise<{ id: string }[]> {
+  const safeLimit = Math.max(1, Math.floor(limit));
+  return db.$queryRawUnsafe<{ id: string }[]>(`
+    UPDATE jobs
+    SET status = 'PROCESSING', updated_at = NOW()
+    WHERE id IN (
+      SELECT id FROM jobs
+      WHERE status = 'PENDING'
+        AND run_at <= NOW()
+      ORDER BY run_at ASC
+      LIMIT ${safeLimit}
+      FOR UPDATE SKIP LOCKED
+    )
+    RETURNING id
+  `);
+}
 
 async function processJob(jobId: string) {
   logger.info({ jobId }, 'Processing job');
 
   try {
-    await db.job.update({
-      where: { id: jobId },
-      data: {
-        status: JobStatus.PROCESSING,
-        updatedAt: new Date(),
-      },
-    });
-
     await simulateWork(jobId);
 
     await db.job.update({
@@ -74,54 +97,3 @@ async function simulateWork(jobId: string): Promise<void> {
     throw new Error('Simulated job failure');
   }
 }
-
-async function pollJobs() {
-  try {
-    const jobs = await db.job.findMany({
-      where: {
-        status: JobStatus.PENDING,
-        runAt: {
-          lte: new Date(),
-        },
-      },
-      take: 10,
-      orderBy: {
-        runAt: 'asc',
-      },
-    });
-
-    if (jobs.length > 0) {
-      logger.info({ count: jobs.length }, 'Found pending jobs');
-
-      await Promise.all(jobs.map((job) => processJob(job.id)));
-    }
-  } catch (error) {
-    logger.error({ error }, 'Error polling jobs');
-  }
-}
-
-async function startWorker() {
-  logger.info('Worker started');
-
-  while (true) {
-    await pollJobs();
-    await new Promise((resolve) => setTimeout(resolve, workerConfig.pollIntervalMs));
-  }
-}
-
-process.on('SIGINT', async () => {
-  logger.info('Worker shutting down...');
-  await db.$disconnect();
-  process.exit(0);
-});
-
-process.on('SIGTERM', async () => {
-  logger.info('Worker shutting down...');
-  await db.$disconnect();
-  process.exit(0);
-});
-
-startWorker().catch((error) => {
-  logger.error({ error }, 'Worker crashed');
-  process.exit(1);
-});
