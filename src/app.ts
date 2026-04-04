@@ -19,7 +19,9 @@ const app = express();
 
 app.use(helmet());
 app.use(nocache());
-app.use(cors());
+if (appConfig.corsOrigin) {
+  app.use(cors({ origin: appConfig.corsOrigin, credentials: true }));
+}
 app.use(timeout(appConfig.requestTimeoutMs));
 app.use(express.json());
 app.use(pinoHttp({ logger }));
