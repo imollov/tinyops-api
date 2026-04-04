@@ -63,7 +63,10 @@ export const registerUser = async (req: Request, res: Response) => {
 
     req.session.userId = newUser.id;
 
-    res.status(201).send({ message: 'User registered', user: toUserResponse(newUser) });
+    req.session.save((err) => {
+      if (err) return sendError(res, 500, 'Failed to register user');
+      res.status(201).send({ message: 'User registered', user: toUserResponse(newUser) });
+    });
   } catch (error) {
     return sendError(res, 500, 'Failed to register user');
   }
@@ -91,7 +94,10 @@ export const loginUser = async (req: Request, res: Response) => {
 
     req.session.userId = user.id;
 
-    res.status(200).send({ message: 'Login successful' });
+    req.session.save((err) => {
+      if (err) return sendError(res, 500, 'Failed to login user');
+      res.status(200).send({ message: 'Login successful' });
+    });
   } catch (error) {
     return sendError(res, 500, 'Failed to login user');
   }
