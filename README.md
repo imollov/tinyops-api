@@ -12,6 +12,7 @@ A modern, production-ready REST API built with Node.js, TypeScript, Express, and
 - 🐂 **BullMQ** - Job queue with retries, backoff, and delayed jobs
 - 🛡️ **Security** - Helmet, CORS, rate limiting
 - 🧪 **Testing** - Jest with supertest
+- 🖥️ **Dashboard** - Minimal React UI for managing jobs
 - 🐳 **Docker** - Containerized development and deployment
 - ☸️ **Kubernetes** - Ready for orchestration
 - 📝 **Logging** - Pino structured logging
@@ -116,6 +117,11 @@ npm run worker
 - `GET /api/jobs` - List all jobs
 - `GET /api/jobs?status=...&type=...` - Filter jobs by status and type
 - `GET /api/jobs?cursor=...&limit=...` - Cursor pagination
+
+## User Interface
+
+A lightweight React dashboard for monitoring and creating jobs is available under `/web`.
+See `web/README.md` for setup instructions.
 
 ## Docker
 
