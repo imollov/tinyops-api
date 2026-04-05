@@ -26,6 +26,8 @@ app.use(timeout(appConfig.requestTimeoutMs));
 app.use(express.json());
 app.use(pinoHttp({ logger }));
 
+app.use('/health', healthRouter);
+
 app.use(
   session({
     store: new RedisStore({ client: redis }),
@@ -50,7 +52,6 @@ app.use(
   }),
 );
 
-app.use('/health', healthRouter);
 app.use('/auth', authRouter);
 app.use('/jobs', jobsRouter);
 
