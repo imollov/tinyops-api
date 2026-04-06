@@ -1,6 +1,6 @@
-# TinyOps API
+# TinyOps
 
-A modern, production-ready REST API built with Node.js, TypeScript, Express, and Prisma. Features include authentication, job management with background workers, Redis caching, and automated testing.
+A modern, production-ready backend system for processing and managing async jobs. It demonstrates real-world backend patterns such as job queues, worker services, and retry/backoff strategies, operating within a distributed system deployed on production-style AWS infrastructure. Includes a lightweight dashboard for job monitoring.
 
 ## Features
 
